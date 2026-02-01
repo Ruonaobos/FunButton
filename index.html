@@ -101,4 +101,173 @@
     #yes{
       background:linear-gradient(135deg, var(--yes1), var(--yes2));
       color:white;
-      box-shadow:0 12p
+      box-shadow:0 12px 30px rgba(255,77,166,.45);
+    }
+
+    #no{
+      background:#f3b1c8;
+      color:#6a123c;
+    }
+
+    /* 🦋 Butterflies */
+    .butterfly{
+      position:absolute;
+      width:22px;
+      height:16px;
+      background:radial-gradient(circle at center, #ff9fd6, #ff4da6);
+      border-radius:50%;
+      opacity:.8;
+      animation: fly linear infinite;
+    }
+
+    @keyframes fly{
+      from{
+        transform:translateY(120vh) translateX(0) rotate(0deg);
+      }
+      to{
+        transform:translateY(-20vh) translateX(120px) rotate(360deg);
+      }
+    }
+
+    /* 💖 Final YES overlay */
+    .final-yes{
+      position:absolute;
+      inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:5;
+    }
+
+    .final-yes button{
+      font-size:32px;
+      padding:26px 34px;
+      border-radius:22px;
+      font-weight:900;
+      color:white;
+      border:none;
+      cursor:pointer;
+      background:linear-gradient(135deg, #ff4da6, #ffb3d9);
+      box-shadow:0 20px 60px rgba(255,77,166,.6);
+      animation: pulse 1.8s infinite;
+    }
+
+    @keyframes pulse{
+      0%,100%{ transform:scale(1); }
+      50%{ transform:scale(1.08); }
+    }
+
+    .footer{
+      margin-top:14px;
+      text-align:center;
+      font-size:13px;
+      color:#9a4b6d;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Butterflies -->
+  <div class="butterfly" style="left:10%; animation-duration:18s;"></div>
+  <div class="butterfly" style="left:40%; animation-duration:22s;"></div>
+  <div class="butterfly" style="left:70%; animation-duration:20s;"></div>
+
+  <div class="card">
+    <h1 class="sparkle">Be honest for a second 😏</h1>
+    <p>There’s no pressure… just curiosity 💭</p>
+
+    <div id="arena" class="arena">
+      <button id="yes" class="btn">YES</button>
+      <button id="no" class="btn">NO</button>
+
+      <div id="finalYes" class="final-yes">
+        <button id="finalYesBtn">YES 💖</button>
+      </div>
+    </div>
+
+    <div class="footer">
+      Made with mischief by <b>OBOS</b> 😉
+    </div>
+  </div>
+
+  <script>
+    const arena = document.getElementById("arena");
+    const yesBtn = document.getElementById("yes");
+    const noBtn  = document.getElementById("no");
+    const finalYes = document.getElementById("finalYes");
+    const finalYesBtn = document.getElementById("finalYesBtn");
+
+    const fleeRadius = 130;
+    const jumpStrength = 120;
+    const yesMax = 3.2;
+    let noCaught = false;
+
+    function rect(el){ return el.getBoundingClientRect(); }
+    function clamp(v,min,max){ return Math.max(min,Math.min(max,v)); }
+
+    function init(){
+      const a = rect(arena);
+      yesBtn.style.left = a.width*0.25 + "px";
+      yesBtn.style.top  = a.height*0.55 + "px";
+      noBtn.style.left  = a.width*0.6 + "px";
+      noBtn.style.top   = a.height*0.55 + "px";
+    }
+    window.addEventListener("resize", init);
+    init();
+
+    function getPos(e){
+      const a = rect(arena);
+      return {
+        x:(e.clientX||e.touches?.[0].clientX)-a.left,
+        y:(e.clientY||e.touches?.[0].clientY)-a.top
+      };
+    }
+
+    function center(el){
+      const r = rect(el);
+      const a = rect(arena);
+      return { x:r.left-a.left+r.width/2, y:r.top-a.top+r.height/2 };
+    }
+
+    function dist(a,b){ return Math.hypot(a.x-b.x,a.y-b.y); }
+
+    function moveNo(p){
+      const c = center(noBtn);
+      let vx = c.x-p.x, vy = c.y-p.y;
+      const m = Math.hypot(vx,vy)||1;
+      vx/=m; vy/=m;
+
+      noBtn.style.left = clamp(parseFloat(noBtn.style.left)+vx*jumpStrength,0,arena.clientWidth-noBtn.offsetWidth)+"px";
+      noBtn.style.top  = clamp(parseFloat(noBtn.style.top)+vy*jumpStrength,0,arena.clientHeight-noBtn.offsetHeight)+"px";
+    }
+
+    function scaleYes(p){
+      const c = center(yesBtn);
+      const t = clamp(1-dist(p,c)/220,0,1);
+      yesBtn.style.transform = `scale(${1+t*(yesMax-1)})`;
+    }
+
+    function onMove(e){
+      if(noCaught) return;
+      const p = getPos(e);
+      scaleYes(p);
+      if(dist(p,center(noBtn))<fleeRadius) moveNo(p);
+    }
+
+    arena.addEventListener("pointermove", onMove);
+    arena.addEventListener("touchmove", onMove,{passive:true});
+
+    noBtn.onclick = ()=>{
+      noCaught=true;
+      noBtn.style.display="none";
+      yesBtn.style.display="none";
+      finalYes.style.display="flex";
+    };
+
+    finalYesBtn.onclick = ()=>{
+      alert("I knew it 😌💖");
+    };
+  </script>
+</body>
+</html>
